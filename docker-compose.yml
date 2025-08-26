@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  banking-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: banking-api
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - banking-network
+    volumes:
+      - ./logs:/app/logs
+    labels:
+      - "com.example.description=Banking API Service"
+      - "com.example.version=1.0.0"
+
+  # Опционально: можно добавить реальную базу данных
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: banking-postgres
+  #   environment:
+  #     POSTGRES_DB: banking
+  #     POSTGRES_USER: banking_user
+  #     POSTGRES_PASSWORD: banking_password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - banking-network
+  #   restart: unless-stopped
+
+  # Опционально: Redis для кэширования
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: banking-redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - banking-network
+  #   restart: unless-stopped
+
+networks:
+  banking-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
